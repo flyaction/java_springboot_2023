@@ -25,7 +25,7 @@ class Boot312MessageApplicationTests {
         stopWatch.start();
         for (int i = 0; i < 10000; i++) {
             //JUC
-            CompletableFuture future = kafkaTemplate.send("newshaha", "haha-"+i, "哈哈哈-"+i);
+            CompletableFuture future = kafkaTemplate.send("news", "haha-"+i, "哈哈哈-"+i);
             futures[i] = future;
         }
 
@@ -41,7 +41,7 @@ class Boot312MessageApplicationTests {
 
     @Test
     void send(){
-        CompletableFuture future = kafkaTemplate.send("newshaha", "person", new Person(1L, "张三", "hjaha@qq.com"));
+        CompletableFuture future = kafkaTemplate.send("news", "person", new Person(1L, "张三", "hjaha@qq.com"));
 
         future.join();
         System.out.println("消息发送成功...");
