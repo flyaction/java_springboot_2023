@@ -1,13 +1,16 @@
 package com.atguigu.boot3.redis.controller;
 
+import cn.hutool.core.date.DateUtil;
 import com.atguigu.boot3.redis.entity.Person;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author lfy
@@ -56,4 +59,51 @@ public class RedisTestController {
 
         return person;
     }
+    @GetMapping("/bitmap")
+    public void testBitMap(){
+
+        Date date = new Date();
+        int dayOfMonth = DateUtil.dayOfMonth(date);
+        System.out.println(dayOfMonth);
+
+        String key = "bitmap";
+
+        //stringRedisTemplate.opsForValue().setBit(key, dayOfMonth - 1, true);
+
+        //获取本月截止今天为止的所有的签到记录，返回的是一个十进制的数字 BITFIELD sign:999:202308 GET u18 0
+        List<Long> result = stringRedisTemplate.opsForValue().bitField(
+                key,
+                BitFieldSubCommands.create()
+                        .get(BitFieldSubCommands.BitFieldType.unsigned(dayOfMonth)).valueAt(0)
+        );
+
+        System.out.println(result);
+
+        if (result == null || result.isEmpty()) {
+            // 没有任何签到结果
+            System.out.println("没有签到");
+        }
+        //num为0，直接返回0
+        Long num = result.get(0);
+        if (num == null || num == 0) {
+            System.out.println("没有签到");
+        }
+        // 6.循环遍历
+        int count = 0;
+        while (true) {
+            // 6.1.让这个数字与1做与运算，得到数字的最后一个bit位  // 判断这个bit位是否为0
+            if ((num & 1) == 0) {
+                // 如果为0，说明未签到，结束
+                break;
+            }else {
+                // 如果不为0，说明已签到，计数器+1
+                count++;
+            }
+            // 把数字右移一位，抛弃最后一个bit位，继续下一个bit位
+            num >>>= 1;
+        }
+
+        System.out.println(count);
+    }
+
 }
